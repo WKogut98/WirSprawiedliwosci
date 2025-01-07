@@ -1,0 +1,46 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.3",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "WirSprawiedliwosci",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"Paper2D",
+				"CoreUObject",
+				"UMG"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "DialogueTree",
+			"Enabled": true,
+			"MarketplaceURL": "https://com.epicgames.launcher://ue/marketplace/product/af018f2268eb426bad40d8b70e255505/"
+		},
+		{
+			"Name": "Water",
+			"Enabled": true
+		},
+		{
+			"Name": "ElectraPlayer",
+			"Enabled": true
+		}
+	],
+	"TargetPlatforms": [
+		"Windows",
+		"Linux",
+		"Mac"
+	]
+}
