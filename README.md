@@ -1,5 +1,5 @@
 # This repository only contains the source code and config files
-Game assets, plugins directory, binaries are not part of the repository.
+Game assets, plugins directory, binaries etc. are not part of the repository.
 
 ## unresolved bugs
 
