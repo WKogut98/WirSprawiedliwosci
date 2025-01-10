@@ -368,39 +368,6 @@ void ADefaultGameMode::RemoveAlly(FString AllyName, bool bRemovePermanently)
 	}
 }
 
-//void ADefaultGameMode::AddNewAlly(AAlly* NewAlly, int32 Rank)
-//{
-//	if (!NewAlly || Rank > 4) return;
-//
-//	// Remove existing ally at that rank
-//	if (Rank - 1 < AlliedParty.Num())
-//	{
-//		if (AAlly* ExistingAlly = AlliedParty[Rank - 1])
-//		{
-//			ExistingAlly->Rank = 0;
-//			AlliedParty.Remove(ExistingAlly);
-//		}
-//	}
-//
-//	// Add new ally
-//	NewAlly->Rank = Rank;
-//	AlliedParty.Insert(NewAlly, Rank - 1);
-//
-//	// Ensure party size limit
-//	if (AlliedParty.Num() > 4)
-//	{
-//		AlliedParty.RemoveAt(4);
-//	}
-//
-//	// Show HUD notification
-//	if (auto CurrentHUD = Cast<ADefaultHUD>(UGameplayStatics::GetPlayerController(this, 0)->GetHUD()))
-//	{
-//		CurrentHUD->ShowInfoText(TEXT("Nowy cz\u0142onek dru\u017cyny: ") + NewAlly->CharacterName);
-//		CurrentHUD->UpdateOverlays();
-//	}
-//	UpdateAlliesLocation();
-//}
-
 void ADefaultGameMode::AddNewAlly(AAlly* NewAlly, int32 Rank)
 {
 	if (NewAlly == nullptr || Rank>4) return;

@@ -160,7 +160,6 @@ void AFightEncounter::SpawnEnemyParty()
 	SpawnEnemy(Location, EnemyPartyClassesRankThree);
 	OffestEnemySpawnLocation(Location);
 	SpawnEnemy(Location, EnemyPartyClassesRankFour);
-	Fight->EnemiesAlive = Fight->EnemyParty.Num();
 }
 
 void AFightEncounter::SpawnEnemy(FVector& Location, TArray<TSubclassOf<AEnemy>> EnemyClassArray)
@@ -213,7 +212,6 @@ void AFightEncounter::SetupAllies()
 	Fight->AlliedParty.Empty();
 	if (CurrentGameMode == nullptr) return;
 	Fight->AlliedParty = CurrentGameMode->AlliedParty;
-	Fight->AlliesAlive = CurrentGameMode->AlliedParty.Num();
 	AMainCharacter* MainCharacter = Cast<AMainCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	if (MainCharacter)
 	{

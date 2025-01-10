@@ -94,6 +94,8 @@ public:
 
 	inline static bool IsFaster(ACombatCharacter* A, ACombatCharacter* B);
 
+	bool AllAlliesDead();
+
 	UPROPERTY()
 	APlayerController* Controller;
 
@@ -120,12 +122,6 @@ public:
 
 	UPROPERTY()
 	AFightEncounter* Encounter;
-
-	UPROPERTY()
-	int16 AlliesAlive;
-
-	UPROPERTY()
-	int16 EnemiesAlive;
 
 	UPROPERTY()
 	ADefaultHUD* CurrentHUD;

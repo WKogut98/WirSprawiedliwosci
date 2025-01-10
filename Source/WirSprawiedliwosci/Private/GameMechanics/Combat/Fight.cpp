@@ -50,7 +50,7 @@ void UFight::StartTurn()
 	{
 		CurrentCharacter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
 	}
-	if (bTurnInProgress)
+	if (bTurnInProgress || TurnQueue.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Attempted to start turn while another is in progress"));
 		return;
@@ -805,21 +805,19 @@ void UFight::HandleOnCharacterDeath(ACombatCharacter* DeadCharacter)
 	TurnQueue.Remove(DeadCharacter);
 	if (DeadCharacter->IsA(AAlly::StaticClass()))
 	{
-		AlliesAlive--;
-		if (AlliesAlive == 0)
+		if (AllAlliesDead())
 		{
 			Encounter->GetWorldTimerManager().SetTimer(TurnTimer, Encounter, &AFightEncounter::EndFightFailure, 2.f);
 		}
 	}
 	if (DeadCharacter->IsA(AEnemy::StaticClass()))
 	{
-		EnemiesAlive--;
 		Encounter->GainedExp += DeadCharacter->GetExperience();
-		if (EnemiesAlive == 0)
+		EnemyParty.Remove(Cast<AEnemy>(DeadCharacter));
+		if (EnemyParty.IsEmpty())
 		{
 			Encounter->GetWorldTimerManager().SetTimer(TurnTimer, Encounter, &AFightEncounter::EndFightSuccess, 1.5f);
 		}
-		EnemyParty.Remove(Cast<AEnemy>(DeadCharacter));
 		CurrentHUD = Cast<ADefaultHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 		if (CurrentHUD && CurrentHUD->CombatOverlay)
 		{
@@ -917,4 +915,21 @@ void UFight::DisableMouseEvents()
 inline bool UFight::IsFaster(ACombatCharacter* A, ACombatCharacter* B)
 {
 	return A->Attributes->Stats.Find(TEXT("Narwano\u015b\u0107")) >= B->Attributes->Stats.Find(TEXT("Narwano\u015b\u0107"));
+}
+
+bool UFight::AllAlliesDead()
+{
+	int16 AlliesAlive = 0;
+	for (AAlly* Ally : AlliedParty)
+	{
+		if (!Ally->ActorHasTag(FName("Dead")))
+		{
+			AlliesAlive++;
+		}
+	}
+	if (AlliesAlive == 0)
+	{
+		return true;
+	}
+	return false;
 }
