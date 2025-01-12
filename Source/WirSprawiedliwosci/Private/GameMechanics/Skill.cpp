@@ -131,6 +131,15 @@ void USkill::UseSupportSkill(ACombatCharacter* Target)
 void USkill::UseOffensiveSkill(ACombatCharacter* Target)
 {
 	float Accuracy = BaseAccuracy + *Source->Attributes->Stats.Find(TEXT("Celno\u015b\u0107")) - 10.f;
+	if (Source->StatModifiers.Contains(TEXT("Celno\u015b\u0107")))
+	{
+		int16 AccuracyModifier = *Source->StatModifiers.Find(TEXT("Celno\u015b\u0107"));
+		if (AccuracyModifier < 0)
+		{
+			AccuracyModifier = FMath::Clamp(AccuracyModifier, 0 - (*Source->StatModifiers.Find(TEXT("Celno\u015b\u0107"))), 0.f);
+		}
+		Accuracy += AccuracyModifier;
+	}
 	Accuracy = FMath::Clamp(Accuracy, 0.f, 100.f);
 	if (Target == nullptr || Target->Attributes == nullptr) return;
 	if (DetermineSuccess(Accuracy) || SkillType==ESkillType::EST_AttackAlly)
@@ -151,7 +160,25 @@ void USkill::UseOffensiveSkill(ACombatCharacter* Target)
 			{
 				float Value = CalculateValue(Target);
 				uint8 Power = *Source->Attributes->Stats.Find(TEXT("Zdolno\u015b\u0107 do Ludob\u00f3jstwa"));
+				if (Source->StatModifiers.Contains(TEXT("Zdolno\u015b\u0107 do Ludob\u00f3jstwa")))
+				{
+					int16 PowerModifier = *Source->StatModifiers.Find(TEXT("Zdolno\u015b\u0107 do Ludob\u00f3jstwa"));
+					if (PowerModifier < 0)
+					{
+						PowerModifier = FMath::Clamp(PowerModifier, 0-Power, 0);
+					}
+					Power += PowerModifier;
+				}
 				uint8 Defence = *Target->Attributes->Stats.Find(TEXT("Obrona"));
+				if (Target->StatModifiers.Contains(TEXT("Obrona")))
+				{
+					int16 DefenceModifier = *Target->StatModifiers.Find(TEXT("Obrona"));
+					if (DefenceModifier < 0)
+					{
+						DefenceModifier = FMath::Clamp(DefenceModifier, 0-Defence, 0);
+					}
+					Defence += DefenceModifier;
+				}
 				Value = Value + FMath::Floor(0.05 * Value * Power) - FMath::Floor(0.05 * Value * Defence);
 
 				if (SkillName == TEXT("Wir"))
@@ -166,7 +193,25 @@ void USkill::UseOffensiveSkill(ACombatCharacter* Target)
 				{
 					Target->ChangeFlipbook(TEXT("Counter"));
 					uint8 TargetPower = *Target->Attributes->Stats.Find(TEXT("Zdolno\u015b\u0107 do Ludob\u00f3jstwa"));
+					if (Target->StatModifiers.Contains(TEXT("Zdolno\u015b\u0107 do Ludob\u00f3jstwa")))
+					{
+						int16 PowerModifier = *Target->StatModifiers.Find(TEXT("Zdolno\u015b\u0107 do Ludob\u00f3jstwa"));
+						if (PowerModifier < 0)
+						{
+							PowerModifier = FMath::Clamp(PowerModifier, 0-TargetPower, 0);
+						}
+						TargetPower += PowerModifier;
+					}
 					uint8 SourceDefence = *Source->Attributes->Stats.Find(TEXT("Obrona"));
+					if (Source->StatModifiers.Contains(TEXT("Obrona")))
+					{
+						int16 DefenceModifier = *Source->StatModifiers.Find(TEXT("Obrona"));
+						if (DefenceModifier < 0)
+						{
+							DefenceModifier = FMath::Clamp(DefenceModifier, 0-SourceDefence, 0);
+						}
+						SourceDefence += DefenceModifier;
+					}
 					float CounterValue = 2.f;//Value * 0.3f;
 					Source->GetHit(CounterValue + FMath::Floor(0.05 * CounterValue * TargetPower));
 					Source->ShowSpecialInfoText(TEXT("Skontrowano!"));

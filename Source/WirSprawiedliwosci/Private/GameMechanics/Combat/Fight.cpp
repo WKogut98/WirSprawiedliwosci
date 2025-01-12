@@ -67,12 +67,14 @@ void UFight::StartTurn()
 		EndTurn();
 		return;
 	}
+	CurrentCharacter->OnCharacterEndTurn.AddDynamic(this, &UFight::HandleOnCharacterEndTurn);
 	TurnQueue.Remove(CurrentCharacter);
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, __FUNCTION__);
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, CurrentCharacter->CharacterName);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[Fight] Started Turn for character %s"), *CurrentCharacter->GetName());
 	if (TurnQueue.IsEmpty())
 	{
 		BuildTurnOrder();
@@ -100,6 +102,7 @@ void UFight::StartTurn()
 	}
 	if (Encounter && CurrentCharacter->IsA(AEnemy::StaticClass()))
 	{
+		Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 		Encounter->GetWorldTimerManager().SetTimer(TurnTimer, this, &UFight::PerformEnemyTurn, 2.f);
 	}
 }
@@ -107,7 +110,8 @@ void UFight::StartTurn()
 void UFight::EndTurn()
 {
 	if (!CurrentCharacter || !Encounter) return;
-		
+	
+	CurrentCharacter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
 	Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 	DisableMouseEvents();
 	if (GEngine)
@@ -115,6 +119,7 @@ void UFight::EndTurn()
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow , __FUNCTION__);
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Yellow, CurrentCharacter->CharacterName);
 	}
+	UE_LOG(LogTemp, Warning, TEXT("[Fight] Started Turn for character %s"), *CurrentCharacter->GetName());
 	if (TurnQueue.IsEmpty())
 	{
 		BuildTurnOrder();
@@ -132,9 +137,7 @@ void UFight::EndTurn()
 	CurrentCharacter->UpdateEffectIcons();
 	CurrentCharacter->GetWorldTimerManager().SetTimer(CurrentCharacter->TurnTimer, 
 		CurrentCharacter, &ACombatCharacter::EndTurn, TimeToWait);
-	Encounter->GetWorldTimerManager().SetTimer(TurnTimer, this, &UFight::StartTurn, TimeToWait + 0.2);
 	CurrentCharacter->HideArrow();
-	bTurnInProgress = false;
 }
 
 void UFight::MarkTargetsForSelection()
@@ -210,7 +213,7 @@ bool UFight::SkillTargetsEnemy()
 void UFight::AddCurrentCharacterToOverlay()
 {
 	if (TurnQueue.IsEmpty()) return;
-	if (!CurrentCharacter->IsValidLowLevel()) return;
+	if (CurrentCharacter==nullptr || !CurrentCharacter->IsValidLowLevel()) return;
 	CurrentHUD = Cast<ADefaultHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 	if (CurrentHUD && CurrentHUD->CombatOverlay)
 	{
@@ -238,6 +241,7 @@ void UFight::AddSkillIconClickedEvents()
 		if (SkillIcon && SkillIcon->Skill)
 		{
 			SkillIcon->OnSkillIconClicked.AddUniqueDynamic(this, &UFight::HandleOnSkillIconClicked);
+			UE_LOG(LogTemp, Log, TEXT("Added skill icon clicked event for skill: %s"), *SkillIcon->Skill->SkillName);
 		}
 	}
 	CurrentHUD->CombatOverlay->AllyUlt->OnSkillIconClicked.AddUniqueDynamic(this, &UFight::HandleOnSkillIconClicked);
@@ -254,17 +258,21 @@ void UFight::AddItemClickedEvents()
 
 void UFight::PerformEnemyTurn()
 {
-	if (CurrentCharacter == nullptr)
+	if (Encounter)
 	{
-		if(Encounter)
-		{
-			Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
-		}
+		Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
+	}
+	if (CurrentCharacter)
+	{
+		CurrentCharacter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
+	}
+	if (Encounter== nullptr || CurrentCharacter == nullptr)
+	{
 		EndTurn();
 		return;
 	}
 	AEnemy* CurrentEnemy = Cast<AEnemy>(CurrentCharacter);
-	CurrentCharacter->GetWorldTimerManager().SetTimer(TurnTimer, this, &UFight::EndTurn, 15.f);
+	Encounter->GetWorldTimerManager().SetTimer(TurnTimer, this, &UFight::EndTurn, 15.f);
 	if (CurrentEnemy)
 	{
 		USkill* SummonSkill = GetEnemySummonSkill(CurrentEnemy);
@@ -273,7 +281,7 @@ void UFight::PerformEnemyTurn()
 			CurrentTarget = CurrentEnemy;
 			CurrentSkill = SummonSkill;
 			Targets = BuildTargetArray();
-			CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+			Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 			UseSkill();
 			EndTurn();
 		}
@@ -290,7 +298,7 @@ void UFight::PerformEnemyTurn()
 			}
 			else
 			{
-				CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+				Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 				UseSkill();
 				EndTurn();
 			}
@@ -316,7 +324,7 @@ void UFight::PerformEnemyTurn()
 			}
 			else
 			{
-				CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+				Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 				UseSkill();
 				EndTurn();
 			}
@@ -342,7 +350,7 @@ void UFight::PerformEnemyTurn()
 					EnemyAttacks.Remove(CurrentSkill);
 					if (EnemyAttacks.IsEmpty())
 					{
-						CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+						Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 						EndTurn();
 						return;
 					}
@@ -363,7 +371,7 @@ void UFight::PerformEnemyTurn()
 				CurrentSkill = EnemyAttacks[Index];
 				if (NoTargetsForEnemyAttack())
 				{
-					CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+					Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 					EndTurn();
 					return;
 				}
@@ -376,7 +384,7 @@ void UFight::PerformEnemyTurn()
 			}
 			else
 			{
-				CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+				Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 				UseSkill();
 				EndTurn();
 			}
@@ -385,7 +393,7 @@ void UFight::PerformEnemyTurn()
 	}
 	else
 	{
-		CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+		Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 		EndTurn();
 		return;
 	}
@@ -450,8 +458,10 @@ bool UFight::NoTargetsForEnemyAttack()
 
 void UFight::TriggerMelee(ACombatCharacter* Source)
 {
+	if (!Encounter) return;
 	if (Targets.IsEmpty())
 	{
+		Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 		EndTurn();
 		return;
 	}
@@ -463,7 +473,7 @@ void UFight::TriggerMelee(ACombatCharacter* Source)
 	}
 	else
 	{
-		CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+		Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 		UseSkill();
 		EndTurn();
 		return;
@@ -637,6 +647,7 @@ TArray<int32> UFight::GetAvailableAllyRanks()
 
 void UFight::HandleOnSkillIconClicked(USkill* ClickedSkill)
 {
+	if (!Encounter) return;
 	EnableMouseEvents();
 	if (ClickedSkill)
 	{
@@ -653,10 +664,11 @@ void UFight::HandleOnSkillIconClicked(USkill* ClickedSkill)
 			Targets = { CurrentCharacter };
 			UseSkill();
 			DisableMouseEvents();
-			CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+			Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 			EndTurn();
 			return;
 		}
+		UE_LOG(LogTemp, Log, TEXT("Skill icon clicked: %s, Level: %d, Unlocked: %s"), *ClickedSkill->SkillName, ClickedSkill->Level, ClickedSkill->bUnlocked ? TEXT("true") : TEXT("false"));
 	}
 }
 
@@ -670,7 +682,8 @@ void UFight::HandleOnEndTurnButtonClicked()
 
 void UFight::HandleOnCharacterHover(ACombatCharacter* HoveredCharacter)
 {
-	if (HoveredCharacter == nullptr || CurrentSkill->NumberOfTargets <= 1) return;
+	if (HoveredCharacter == nullptr || CurrentSkill == nullptr) return;
+	if (CurrentSkill->NumberOfTargets <= 1) return;
 	if (HoveredCharacter->IsA(AAlly::StaticClass()))
 	{
 		int32 Index = AlliedParty.Find(Cast<AAlly>(HoveredCharacter));
@@ -705,7 +718,7 @@ void UFight::HandleOnCharacterHover(ACombatCharacter* HoveredCharacter)
 
 void UFight::HandleOnCharacterEndHover(ACombatCharacter* HoveredCharacter)
 {
-	if (HoveredCharacter == nullptr || CurrentSkill->NumberOfTargets <= 1) return;
+	if (HoveredCharacter == nullptr || CurrentSkill == nullptr) return;
 	if (CurrentSkill->NumberOfTargets <= 1) return;
 	if (HoveredCharacter->IsA(AAlly::StaticClass()))
 	{
@@ -731,7 +744,7 @@ void UFight::HandleOnCharacterClicked(ACombatCharacter* ClickedCharacter)
 {
 	Targets.Empty();
 	ClearEnemyArrows();
-	if (ClickedCharacter == nullptr) return;
+	if (ClickedCharacter == nullptr || CurrentSkill==nullptr) return;
 	if (ClickedCharacter->IsA(AAlly::StaticClass()))
 	{
 		int32 Index = AlliedParty.Find(Cast<AAlly>(ClickedCharacter));
@@ -763,9 +776,9 @@ void UFight::HandleOnCharacterClicked(ACombatCharacter* ClickedCharacter)
 		}
 		else
 		{
-			if(CurrentCharacter)
+			if(CurrentCharacter && Encounter)
 			{
-				CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+				Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
 				UseSkill();
 				EndTurn();
 			}
@@ -783,7 +796,7 @@ void UFight::HandleOnTargetReached(ACombatCharacter* Character)
 
 void UFight::HandleOnLocationReached(ACombatCharacter* Character)
 {
-	if (Character == nullptr || Character != CurrentCharacter) return;
+	if (Character == nullptr || Character != CurrentCharacter || !Encounter) return;
 	Character->Flip(false);
 	if (Character->IsA(AAlly::StaticClass()))
 	{
@@ -795,7 +808,8 @@ void UFight::HandleOnLocationReached(ACombatCharacter* Character)
 	}
 	Character->SetActorLocation(Character->TargetLocation);
 
-	CurrentCharacter->GetWorldTimerManager().ClearTimer(TurnTimer);
+	CurrentCharacter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
+	Encounter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
 	EndTurn();
 }
 
@@ -807,16 +821,18 @@ void UFight::HandleOnCharacterDeath(ACombatCharacter* DeadCharacter)
 	{
 		if (AllAlliesDead())
 		{
-			Encounter->GetWorldTimerManager().SetTimer(TurnTimer, Encounter, &AFightEncounter::EndFightFailure, 2.f);
+			Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
+			Encounter->GetWorldTimerManager().SetTimer(EndFightTimer, Encounter, &AFightEncounter::EndFightFailure, 2.f);
 		}
 	}
 	if (DeadCharacter->IsA(AEnemy::StaticClass()))
 	{
 		Encounter->GainedExp += DeadCharacter->GetExperience();
 		EnemyParty.Remove(Cast<AEnemy>(DeadCharacter));
-		if (EnemyParty.IsEmpty())
+		if (AllEnemiesDead())
 		{
-			Encounter->GetWorldTimerManager().SetTimer(TurnTimer, Encounter, &AFightEncounter::EndFightSuccess, 1.5f);
+			Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
+			Encounter->GetWorldTimerManager().SetTimer(EndFightTimer, Encounter, &AFightEncounter::EndFightSuccess, 1.5f);
 		}
 		CurrentHUD = Cast<ADefaultHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 		if (CurrentHUD && CurrentHUD->CombatOverlay)
@@ -874,14 +890,32 @@ void UFight::UseItem(UItem* Item)
 	CurrentAlly->bCanUseItems = false;
 }
 
+void UFight::HandleOnCharacterEndTurn(ACombatCharacter* Character)
+{
+	if (Encounter)
+	{
+		Encounter->GetWorldTimerManager().ClearTimer(TurnTimer);
+	}
+	if (CurrentCharacter && Character == CurrentCharacter)
+	{
+		bTurnInProgress = false;
+		CurrentCharacter->OnCharacterEndTurn.RemoveDynamic(this, &UFight::HandleOnCharacterEndTurn);
+		CurrentCharacter->HideArrow();
+		CurrentCharacter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
+		StartTurn();
+	}
+}
+
 void UFight::UseSkillMelee()
+
 {
 	UseSkill();
-	CurrentCharacter->GetWorldTimerManager().SetTimer(TurnTimer, this, &UFight::CharacterMoveToLocation, 1.f);
+	CurrentCharacter->GetWorldTimerManager().SetTimer(CurrentCharacter->TurnTimer, this, &UFight::CharacterMoveToLocation, 1.f);
 }
 
 void UFight::CharacterMoveToLocation()
 {
+	CurrentCharacter->GetWorldTimerManager().ClearTimer(CurrentCharacter->TurnTimer);
 	CurrentCharacter->bShouldMoveToLocation = true;
 }
 
@@ -914,7 +948,35 @@ void UFight::DisableMouseEvents()
 
 inline bool UFight::IsFaster(ACombatCharacter* A, ACombatCharacter* B)
 {
-	return A->Attributes->Stats.Find(TEXT("Narwano\u015b\u0107")) >= B->Attributes->Stats.Find(TEXT("Narwano\u015b\u0107"));
+	if (A == nullptr || B == nullptr) return false;
+	if (A->Attributes == nullptr || B->Attributes == nullptr) return false;
+	uint8* SpeedA = A->Attributes->Stats.Find(TEXT("Szybko\u015b\u0107"));
+	uint8* SpeedB = B->Attributes->Stats.Find(TEXT("Szybko\u015b\u0107"));
+
+	if (SpeedA == nullptr || SpeedB == nullptr) return false;
+
+	uint8 SpeedAValue = *SpeedA;
+	uint8 SpeedBValue = *SpeedB;
+
+	if (A->StatModifiers.Contains(TEXT("Szybko\u015b\u0107")))
+	{
+		int16 SpeedModifierA = *A->StatModifiers.Find(TEXT("Szybko\u015b\u0107"));
+		if (SpeedModifierA < 0)
+		{
+			SpeedModifierA = FMath::Clamp(SpeedModifierA, 0-SpeedAValue, 0);
+		}
+		SpeedAValue += SpeedModifierA;
+	}
+	if (B->StatModifiers.Contains(TEXT("Szybko\u015b\u0107")))
+	{
+		int16 SpeedModifierB = *B->StatModifiers.Find(TEXT("Szybko\u015b\u0107"));
+		if (SpeedModifierB < 0)
+		{
+			SpeedModifierB = FMath::Clamp(SpeedModifierB, 0-SpeedBValue, 0);
+		}
+		SpeedBValue += SpeedModifierB;
+	}
+	return SpeedAValue >= SpeedBValue;
 }
 
 bool UFight::AllAlliesDead()
@@ -928,6 +990,23 @@ bool UFight::AllAlliesDead()
 		}
 	}
 	if (AlliesAlive == 0)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool UFight::AllEnemiesDead()
+{
+	int16 EnemiesAlive = 0;
+	for (AEnemy* Enemy : EnemyParty)
+	{
+		if (!Enemy->ActorHasTag(FName("Dead")))
+		{
+			EnemiesAlive++;
+		}
+	}
+	if (EnemiesAlive == 0 || EnemyParty.IsEmpty())
 	{
 		return true;
 	}

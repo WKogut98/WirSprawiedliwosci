@@ -18,6 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterClickedDelegate, ACombat
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterDeathDelegate, ACombatCharacter*, DeadCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetReachedDelegate, ACombatCharacter*, Character);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLocationReachedDelegate, ACombatCharacter*, Character);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnCharacterEndTurnDelegate, ACombatCharacter*, Character);
 
 UCLASS()
 class WIRSPRAWIEDLIWOSCI_API ACombatCharacter : public ASpriteCharacter
@@ -59,6 +60,8 @@ public:
 
 	void RemoveNegativeEffects();
 	void RemoveEffectTags();
+	void AddStatModifiers();
+	void RemoveStatModifiers();
 	void Dodge();
 	void AttackMissed();
 	void ReceiveCrit();
@@ -133,6 +136,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FOnCharacterDeathDelegate OnCharacterDeath;
 
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FOnCharacterEndTurnDelegate OnCharacterEndTurn;
+
 	UPROPERTY()
 	AActor* CombatTarget;
 
@@ -144,6 +150,9 @@ public:
 
 	UPROPERTY()
 	FTimerHandle TurnTimer;
+
+	UPROPERTY()
+	TMap<FString, int16> StatModifiers;
 
 	//UPROPERTY()
 	bool bSelectable = false;

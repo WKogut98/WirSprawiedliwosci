@@ -131,15 +131,17 @@ void ACombatCharacter::UpdateEffectIcons()
 
 void ACombatCharacter::StartTurn()
 {
-	UE_LOG(LogTemp, Log, TEXT("Starting turn for character: %s"), *GetName());
+	UE_LOG(LogTemp, Log, TEXT("[ACombatCharacter] Start turn for character: %s"), *GetName());
 	Turn++;
 	ApplyEffectsPreTurn();
 }
 
 void ACombatCharacter::EndTurn()
 {
+	UE_LOG(LogTemp, Log, TEXT("[ACombatCharacter] End turn for character: %s"), *GetName());
 	ApplyEffectsPostTurn();
 	UpdateEffectIcons();
+	OnCharacterEndTurn.Broadcast(this);
 }
 
 void ACombatCharacter::ApplyEffectsPreTurn()
@@ -147,7 +149,7 @@ void ACombatCharacter::ApplyEffectsPreTurn()
 	for (UEffect* Effect : Effects)
 	{
 		FString AffectedAttribute = Effect->GetAffectedAttribute();
-		if (Effect->TurnMode == EEffectTurnMode::EETM_BuffDebuff && !AffectedAttribute.IsEmpty())
+		/*if (Effect->TurnMode == EEffectTurnMode::EETM_BuffDebuff && !AffectedAttribute.IsEmpty())
 		{
 			uint8 NewStatValue = *Attributes->Stats.Find(AffectedAttribute) + Effect->GetValue();
 			Attributes->Stats.Emplace(AffectedAttribute, NewStatValue);
@@ -156,7 +158,8 @@ void ACombatCharacter::ApplyEffectsPreTurn()
 		if (Effect->TurnMode == EEffectTurnMode::EETM_Passive)
 		{
 			Effect->bApplied = true;
-		}
+		}*/
+		Effect->bApplied = true;
 	}
 	UpdateEffectIcons();
 }
@@ -188,9 +191,13 @@ void ACombatCharacter::ApplyEffectsPostTurn()
 		FString AffectedAttribute = Effect->GetAffectedAttribute();
 		if (Effect->TurnMode == EEffectTurnMode::EETM_BuffDebuff && !AffectedAttribute.IsEmpty() && Effect->bApplied)
 		{
-			uint8 NewStatValue = *Attributes->Stats.Find(AffectedAttribute) - Effect->GetValue();
-			Attributes->Stats.Emplace(AffectedAttribute, NewStatValue);
+			//uint8 NewStatValue = *Attributes->Stats.Find(AffectedAttribute) - Effect->GetValue();
+			//Attributes->Stats.Emplace(AffectedAttribute, NewStatValue);
 			Effect->SetDuration(Effect->GetDuration() - 1);
+			if (Effect->GetDuration() == 0)
+			{
+				StatModifiers.Remove(AffectedAttribute);
+			}
 		}
 		if(Effect->TurnMode==EEffectTurnMode::EETM_Passive && Effect->bApplied)
 		{
@@ -384,10 +391,9 @@ void ACombatCharacter::AddEffect(UEffect* Effect)
 		case EEffectTurnMode::EETM_BuffDebuff:
 			if (!AffectedAttribute.IsEmpty())
 			{
-				uint8 NewStatValue = *Attributes->Stats.Find(AffectedAttribute) + Effect->GetValue();
-				Attributes->Stats.Emplace(AffectedAttribute, NewStatValue);
-			}
-			NewValue = ExistingEffectOfType->GetValue() + Effect->GetValue(); break;
+				NewValue = ExistingEffectOfType->GetValue() + Effect->GetValue();
+				StatModifiers.Emplace(AffectedAttribute, NewValue);
+			} break;
 		default: break;
 		}
 		ExistingEffectOfType->SetValue(NewValue);
@@ -399,6 +405,10 @@ void ACombatCharacter::AddEffect(UEffect* Effect)
 	if (!ExistingEffectOfType)
 	{
 		Effects.Add(DuplicateObject<UEffect>(Effect, this));
+		if (Effect->TurnMode == EEffectTurnMode::EETM_BuffDebuff)
+		{
+			StatModifiers.Emplace(Effect->GetAffectedAttribute(), Effect->GetValue());
+		}
 	}
 	if(Effect->EffectSound)
 	{
@@ -417,8 +427,7 @@ void ACombatCharacter::RemoveNegativeEffects()
 	{
 		if (Effect->TurnMode == EEffectTurnMode::EETM_BuffDebuff && Effect->GetValue()<0 && !Effect->GetAffectedAttribute().IsEmpty())
 		{
-			uint8 NewValue = *Attributes->Stats.Find(Effect->GetAffectedAttribute()) - Effect->GetValue();
-			Attributes->Stats.Emplace(Effect->GetAffectedAttribute(), NewValue);
+			StatModifiers.Remove(Effect->GetAffectedAttribute());
 			Effects.Remove(Effect);
 		}
 		if (Effect->TurnMode == EEffectTurnMode::EETM_EndOfTurn && !Effect->bHeal)
@@ -441,6 +450,27 @@ void ACombatCharacter::RemoveEffectTags()
 		{
 			Tags.Remove(FName(Effect->EffectName));
 		}
+	}
+}
+
+void ACombatCharacter::AddStatModifiers()
+{
+	if (Effects.IsEmpty()) return;
+	for (UEffect* Effect : Effects)
+	{
+		if (Effect->TurnMode == EEffectTurnMode::EETM_BuffDebuff && !Effect->GetAffectedAttribute().IsEmpty())
+		{
+			StatModifiers.Emplace(Effect->GetAffectedAttribute(), Effect->GetValue());
+		}
+	}
+}
+
+void ACombatCharacter::RemoveStatModifiers()
+{
+	if (StatModifiers.IsEmpty()) return;
+	for (TPair<FString, int16> Modifier : StatModifiers)
+	{
+		StatModifiers.Remove(Modifier.Key);
 	}
 }
 

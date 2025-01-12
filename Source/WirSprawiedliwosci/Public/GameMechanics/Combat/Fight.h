@@ -81,6 +81,9 @@ public:
 	void UseItem(UItem* Item);
 
 	UFUNCTION()
+	void HandleOnCharacterEndTurn(ACombatCharacter* Character);
+
+	UFUNCTION()
 	void HandleOnTargetReached(ACombatCharacter* Character);
 
 	UFUNCTION()
@@ -95,6 +98,7 @@ public:
 	inline static bool IsFaster(ACombatCharacter* A, ACombatCharacter* B);
 
 	bool AllAlliesDead();
+	bool AllEnemiesDead();
 
 	UPROPERTY()
 	APlayerController* Controller;
@@ -131,6 +135,9 @@ public:
 
 	UPROPERTY()
 	FTimerHandle TurnTimer;
+
+	UPROPERTY()
+	FTimerHandle EndFightTimer;
 
 	UPROPERTY()
 	bool bTurnInProgress = false;

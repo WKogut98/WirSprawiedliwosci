@@ -92,6 +92,8 @@ void USkillMenu::HandleSkillIconClicked(USkill* ClickedSkill)
 	}
 	UpdateSkillIcons();
 	UpdateSkillPointText();
+	UE_LOG(LogTemp, Log, TEXT("Skill clicked: %s, Level: %d, Unlocked: %s"), 
+		*ClickedSkill->SkillName, ClickedSkill->Level, ClickedSkill->bUnlocked ? TEXT("true") : TEXT("false"));
 }
 
 void USkillMenu::HandleEquippedSkillIconClicked(USkill* ClickedSkill)
@@ -120,6 +122,8 @@ void USkillMenu::HandleEquippedSkillIconClicked(USkill* ClickedSkill)
 			CurrentAlly->EquippedSkills[Index] = CurrentSkill;
 		}
 	}
+	UE_LOG(LogTemp, Log, TEXT("Equipped skill: %s, Level: %d, Unlocked: %s"),
+		*CurrentSkill->SkillName, CurrentSkill->Level, CurrentSkill->bUnlocked ? TEXT("true") : TEXT("false"));
 	CurrentSkill = nullptr;
 	UpdateEquippedSkillIcons();
 }

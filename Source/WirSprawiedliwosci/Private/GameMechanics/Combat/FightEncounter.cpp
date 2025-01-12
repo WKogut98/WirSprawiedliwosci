@@ -132,6 +132,7 @@ void AFightEncounter::EndFightSuccess()
 		}
 		APlayerController* Controller = GetWorld()->GetFirstPlayerController();
 		Controller->SetViewTargetWithBlend(MainCharacter, 1.f);
+		GetWorldTimerManager().ClearTimer(Fight->EndFightTimer);
 		GetWorldTimerManager().SetTimer(FightEndTimer, this, &AFightEncounter::SetupAlliesAfterFightEnd, 1.f);
 		OnFightEnded.Broadcast();
 	}
@@ -244,6 +245,7 @@ void AFightEncounter::SetupAllies()
 		Ally->Flip(false);
 		Ally->ShowWidget();
 		Ally->HideArrow();
+		Ally->AddStatModifiers();
 		Ally->UpdateEffectIcons();
 		Ally->ChangeFlipbook(TEXT("IdleCombat"));
 		Ally->OnCharacterHover.AddDynamic(Fight, &UFight::HandleOnCharacterHover);
@@ -284,6 +286,7 @@ void AFightEncounter::SetupAlliesAfterFightEnd()
 		Ally->Turn = 0;
 		Ally->HideWidget();
 		Ally->ChangeFlipbook(TEXT("Idle"));
+		Ally->RemoveStatModifiers();
 		if (Ally->ActorHasTag(FName("Dead")))
 		{
 			Ally->bIsAlive = true;
