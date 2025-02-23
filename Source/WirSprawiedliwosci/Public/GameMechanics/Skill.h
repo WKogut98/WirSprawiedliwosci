@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 #include "SkillTypes.h"
+#include "Combat/DamageTypes.h"
 #include "Skill.generated.h"
 
 class UEffect;
@@ -122,6 +123,9 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	ESkillSpecialProperty SpecialProperty;
+
+	UPROPERTY(EditAnywhere)
+	EDamageType DamageType;
 
 	UPROPERTY(EditAnywhere)
 	USoundBase* SkillSound;

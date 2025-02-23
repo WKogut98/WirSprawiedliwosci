@@ -3,11 +3,13 @@
 #include "CoreMinimal.h"
 #include "Characters/SpriteCharacter.h"
 #include "GameMechanics/SkillTypes.h"
+#include "GameMechanics/Combat/DamageTypes.h"
 #include "CombatCharacter.generated.h"
 
 class UEffect;
 class USkill;
 class UCharacterWidgetComponent;
+class UDamageIndicatorWidgetComponent;
 class UAttributeComponent;
 class UEffectIcon;
 class UNiagaraSystem;
@@ -30,7 +32,7 @@ public:
 
 	//Combat
 	UFUNCTION(BlueprintCallable)
-	void GetHit(float Damage);
+	void GetHit(float Damage, EDamageType DamageType = EDamageType::EDT_Normal);
 
 	UFUNCTION(BlueprintCallable)
 	void GetHitEffect(UEffect* Effect);
@@ -201,8 +203,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UCharacterWidgetComponent* CharacterWidgetComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UDamageIndicatorWidgetComponent* DamageIndicatorComponent;
+
 	UPROPERTY(EditAnywhere, Category = Sound)
 	USoundBase* HitSound;
+
+	UPROPERTY(EditAnywhere, Category = Sound)
+	USoundBase* HitSoundDarkMagic;
+
+	UPROPERTY(EditAnywhere, Category = Sound)
+	USoundBase* HitSoundBrightMagic;
+
+	UPROPERTY(EditAnywhere, Category = Sound)
+	USoundBase* HitSoundBonk;
+
+	UPROPERTY(EditAnywhere, Category = Sound)
+	USoundBase* HitSoundChem;
+
+	UPROPERTY(EditAnywhere, Category = Sound)
+	USoundBase* HitSoundSplash;
+
+	UPROPERTY(EditAnywhere, Category = Sound)
+	USoundBase* HitSoundSlap;
 
 	UPROPERTY(EditAnywhere, Category = Sound)
 	USoundBase* WhirlSound;
@@ -224,6 +247,21 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = VisualEffects)
 	UParticleSystem* HitParticles;
+
+	UPROPERTY(EditAnywhere, Category = VisualEffects)
+	UParticleSystem* HitParticlesSplash;
+
+	UPROPERTY(EditAnywhere, Category = VisualEffects)
+	UParticleSystem* HitParticlesChem;
+
+	UPROPERTY(EditAnywhere, Category = VisualEffects)
+	UNiagaraSystem* HitParticlesDarkMagic;
+
+	UPROPERTY(EditAnywhere, Category = VisualEffects)
+	UNiagaraSystem* HitParticlesBrightMagic;
+
+	UPROPERTY(EditAnywhere, Category = VisualEffects)
+	UNiagaraSystem* HitParticlesBang;
 
 	UPROPERTY(EditAnywhere)
 	UNiagaraSystem* HealVFX;

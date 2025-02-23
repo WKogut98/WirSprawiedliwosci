@@ -10,6 +10,7 @@
 #include "PaperFlipbookComponent.h"
 #include "UI/CharacterWidgetComponent.h"
 #include "UI/CharacterWidget.h"
+#include "UI/DamageIndicatorWidgetComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 
@@ -18,6 +19,8 @@ ACombatCharacter::ACombatCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	CharacterWidgetComponent = CreateDefaultSubobject<UCharacterWidgetComponent>(TEXT("Characer Widget"));
 	CharacterWidgetComponent->SetupAttachment(GetRootComponent());
+	DamageIndicatorComponent = CreateDefaultSubobject<UDamageIndicatorWidgetComponent>(TEXT("Damage Indicator"));
+	DamageIndicatorComponent->SetupAttachment(GetRootComponent());
 
 	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
 
@@ -258,22 +261,72 @@ void ACombatCharacter::ShowSpecialInfoText(FString SpecialText)
 	}
 }
 
-void ACombatCharacter::GetHit(float Damage)
+void ACombatCharacter::GetHit(float Damage, EDamageType DamageType)
 {
 	if (GetEffectOfType(EEffectType::EET_Deathwish))
 	{
 		Damage *= 2;
 	}
 	Attributes->ReceiveDamage(Damage);
+	if (DamageIndicatorComponent)
+	{
+		DamageIndicatorComponent->DisplayDamage(Damage);
+	}
 
-	//efekty
-	if (HitSound)
+	//sounds
+	if (HitSound && DamageType == EDamageType::EDT_Normal)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, HitSound, ParticleSpawner->GetComponentLocation(), GetActorRotation());
 	}
-	if (HitParticles)
+	if (HitSoundDarkMagic && DamageType == EDamageType::EDT_DarkMagic)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSoundDarkMagic, ParticleSpawner->GetComponentLocation(), GetActorRotation());
+	}
+	if (HitSoundBrightMagic && DamageType == EDamageType::EDT_BrightMagic)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSoundBrightMagic, ParticleSpawner->GetComponentLocation(), GetActorRotation());
+	}
+	if (HitSoundBonk && DamageType == EDamageType::EDT_Bonk)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSoundBonk, ParticleSpawner->GetComponentLocation(), GetActorRotation());
+	}
+	if (HitSoundSlap && DamageType == EDamageType::EDT_Slap)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSoundSlap, ParticleSpawner->GetComponentLocation(), GetActorRotation());
+	}
+	if (HitSoundChem && DamageType == EDamageType::EDT_Chemical)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSoundChem, ParticleSpawner->GetComponentLocation(), GetActorRotation());
+	}
+	if (HitSoundSplash && DamageType == EDamageType::EDT_Splash)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, HitSoundSplash, ParticleSpawner->GetComponentLocation(), GetActorRotation());
+	}
+
+	//vfx
+	if (HitParticles && DamageType == EDamageType::EDT_Normal)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticles, ParticleSpawner->GetComponentLocation(), ParticleSpawner->GetComponentRotation());
+	}
+	if (HitParticlesDarkMagic && DamageType == EDamageType::EDT_DarkMagic)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitParticlesDarkMagic, ParticleSpawner->GetComponentLocation(), ParticleSpawner->GetComponentRotation());
+	}
+	if (HitParticlesBrightMagic && DamageType == EDamageType::EDT_BrightMagic)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitParticlesBrightMagic, ParticleSpawner->GetComponentLocation(), ParticleSpawner->GetComponentRotation());
+	}
+	if (HitParticlesBang && (DamageType == EDamageType::EDT_Bonk || DamageType == EDamageType::EDT_Slap || DamageType == EDamageType::EDT_AOE))
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), HitParticlesBang, ParticleSpawner->GetComponentLocation(), ParticleSpawner->GetComponentRotation());
+	}
+	if (HitParticlesChem && DamageType == EDamageType::EDT_Chemical)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticlesChem, ParticleSpawner->GetComponentLocation(), ParticleSpawner->GetComponentRotation());
+	}
+	if (HitParticlesSplash && DamageType == EDamageType::EDT_Splash)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitParticlesSplash, ParticleSpawner->GetComponentLocation(), ParticleSpawner->GetComponentRotation());
 	}
 
 	UpdateHealthBar();
@@ -288,6 +341,11 @@ void ACombatCharacter::GetHitEffect(UEffect* Effect)
 {
 	SpawnEffectParticles(Effect);
 	Attributes->ReceiveDamage(Effect->GetValue());
+
+	if (DamageIndicatorComponent)
+	{
+		DamageIndicatorComponent->DisplayDamage(Effect->GetValue());
+	}
 
 	//efekty
 	if (Effect->EffectSound)
@@ -311,6 +369,10 @@ void ACombatCharacter::GetHitEffect(UEffect* Effect)
 void ACombatCharacter::GetHitVortex(float Damage)
 {
 	Attributes->ReceiveDamage(Damage);
+	if (DamageIndicatorComponent)
+	{
+		DamageIndicatorComponent->DisplayDamage(Damage);
+	}
 	if (WhirlSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, WhirlSound, ParticleSpawner->GetComponentLocation(), GetActorRotation());
@@ -329,6 +391,10 @@ void ACombatCharacter::ReceiveHealing(float Healing)
 	if (Attributes->GetHealth() == Attributes->GetMaxHealth()) return;
 	SpawnHealParticles();
 	Attributes->ReceiveHealing(Healing);
+	if (DamageIndicatorComponent)
+	{
+		DamageIndicatorComponent->DisplayHealing(Healing);
+	}
 	PlayHealSound();
 	UpdateHealthBar();
 }

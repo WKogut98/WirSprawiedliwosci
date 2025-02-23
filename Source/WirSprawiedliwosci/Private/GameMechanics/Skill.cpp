@@ -187,7 +187,7 @@ void USkill::UseOffensiveSkill(ACombatCharacter* Target)
 				}
 				else
 				{
-					Target->GetHit(Value);
+					Target->GetHit(Value, DamageType);
 				}
 				if (Target && Target->ActorHasTag(FName("Kontra")))
 				{
