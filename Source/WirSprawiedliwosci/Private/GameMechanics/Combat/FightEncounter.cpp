@@ -240,6 +240,7 @@ void AFightEncounter::SetupAllies()
 	for (AAlly* Ally : CurrentGameMode->AlliedParty)
 	{
 		Ally->SetActorLocation(Location);
+		Ally->SetActorRotation(FRotator::ZeroRotator);
 		Ally->InitialLocation = Location;
 		
 		Ally->Flip(false);
@@ -255,6 +256,7 @@ void AFightEncounter::SetupAllies()
 		Ally->OnLocationReached.AddDynamic(Fight, &UFight::HandleOnLocationReached);
 		Ally->OnCharacterDeath.AddDynamic(Fight, &UFight::HandleOnCharacterDeath);
 		OffsetAllyLocation(Location);
+		Ally->FlipDelayed(0.2f);
 	}
 }
 
@@ -292,6 +294,14 @@ void AFightEncounter::SetupAlliesAfterFightEnd()
 			Ally->bIsAlive = true;
 			Ally->Tags.Remove(FName("Dead"));
 			Ally->Attributes->SetHealth(Ally->Attributes->GetMaxHealth() / 2.f);
+		}
+		else
+		{
+			float NewHealth = FMath::Clamp(Ally->Attributes->GetHealth() + Ally->Attributes->GetMaxHealth() * 0.25f, 0.f, Ally->Attributes->GetMaxHealth());
+			Ally->Attributes->SetHealth(NewHealth);
+			float NewMana = FMath::Clamp(Ally->Attributes->GetMana() + Ally->Attributes->GetMaxMana() * 0.25f, 0.f, Ally->Attributes->GetMaxMana());
+			Ally->Attributes->SetMana(NewMana);
+			Ally->Attributes->SetRage(Ally->Attributes->GetRage()/2.f);
 		}
 		int32 AllyExp = Ally->GetExperience();
 		Ally->SetExperience(AllyExp + GainedExp);

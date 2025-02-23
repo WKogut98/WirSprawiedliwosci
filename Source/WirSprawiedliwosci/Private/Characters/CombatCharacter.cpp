@@ -255,6 +255,10 @@ void ACombatCharacter::ShowSpecialInfoText(FString SpecialText)
 {
 	if (CharacterWidgetComponent)
 	{
+		if (SpecialText.Len() > 13)
+		{
+			SpecialText = SpecialText.Left(8) + "(...)!";
+		}
 		CharacterWidgetComponent->SetSpecialInfoText(SpecialText);
 		CharacterWidgetComponent->ShowSpecialInfoText();
 		GetWorldTimerManager().SetTimer(SpecialTextTimer, CharacterWidgetComponent, &UCharacterWidgetComponent::HideSpecialInfoText, 1.5f);

@@ -26,6 +26,9 @@ public:
 
 	void UseRandomFood();
 
+	void FlipDelayed(float Time);
+	void FlipDelayedCallback();
+
 	UFUNCTION(BlueprintCallable)
 	ADefaultGameMode* GetCurrentGameMode();
 
@@ -53,5 +56,7 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	USoundBase* LevelUpSound;
+
+	FTimerHandle FlipTimer;
 private:
 };

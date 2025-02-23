@@ -130,6 +130,18 @@ void AAlly::UseRandomFood()
 	FoodItems[Index]->UseItem(this);
 }
 
+void AAlly::FlipDelayed(float Time)
+{
+	GetWorldTimerManager().SetTimer(this->FlipTimer, this, &AAlly::FlipDelayedCallback, Time);
+}
+
+void AAlly::FlipDelayedCallback()
+{
+	GetWorldTimerManager().ClearTimer(this->FlipTimer);
+	Flip(false);
+	SetActorLocation(InitialLocation);
+}
+
 ADefaultGameMode* AAlly::GetCurrentGameMode()
 {
 	if (CurrentGameMode) return CurrentGameMode;

@@ -133,10 +133,18 @@ void UFight::EndTurn()
 	{
 		CurrentHUD->CombatOverlay->SetNewAlly(nullptr);
 	}
-	
+	bTurnInProgress = false;
 	CurrentCharacter->UpdateEffectIcons();
 	CurrentCharacter->GetWorldTimerManager().SetTimer(CurrentCharacter->TurnTimer, 
 		CurrentCharacter, &ACombatCharacter::EndTurn, TimeToWait);
+	for (AAlly* Ally : AlliedParty)
+	{
+		Ally->HideArrow();
+	}
+	for (AEnemy* Enemy : EnemyParty)
+	{
+		Enemy->HideArrow();
+	}
 	CurrentCharacter->HideArrow();
 }
 
