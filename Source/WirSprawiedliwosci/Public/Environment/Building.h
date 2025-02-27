@@ -7,6 +7,8 @@
 #include "GameMechanics/InteractInterface.h"
 #include "Building.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEnteredDelegate);
+
 class UBoxComponent;
 
 UCLASS()
@@ -30,6 +32,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	AActor* Target;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FOnEnteredDelegate OnEntered;
 
 	//getters and setters
 	FORCEINLINE bool IsAccessible() const { return bIsAccessible; };

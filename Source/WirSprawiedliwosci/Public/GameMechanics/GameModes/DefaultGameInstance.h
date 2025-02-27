@@ -128,5 +128,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FString> KilledNPCs;
 
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FString> Choices;
+
 	FTimerHandle SaveIconTimer;
 };

@@ -66,6 +66,8 @@ void ABuilding::Interact_Implementation()
 		CurrentGameMode->UpdateAlliesLocation();
 		CurrentGameMode->GetWorldTimerManager().SetTimer(TeleportTimer, CurrentGameMode, &ADefaultGameMode::UpdateAlliesLocation, 0.2f);
 	}
+
+	OnEntered.Broadcast();
 	SaveGame();
 }
 

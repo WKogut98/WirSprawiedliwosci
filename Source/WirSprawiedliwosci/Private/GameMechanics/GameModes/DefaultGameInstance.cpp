@@ -97,6 +97,7 @@ void UDefaultGameInstance::SaveWorld()
 	SavedGame->CurrentMode = CurrentGameMode->CurrentMode;
 
 	SavedGame->KilledNPCs = KilledNPCs;
+	SavedGame->Choices = Choices;
 }
 
 void UDefaultGameInstance::SaveQuests()
@@ -134,6 +135,7 @@ void UDefaultGameInstance::LoadWorld()
 	LoadCutscenes();
 	LoadFights();
 	KilledNPCs = SavedGame->KilledNPCs;
+	Choices = SavedGame->Choices;
 }
 
 void UDefaultGameInstance::LoadQuests()

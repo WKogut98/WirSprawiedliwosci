@@ -7,6 +7,8 @@
 #include "GameMechanics/InteractInterface.h"
 #include "BuildingExit.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnExitedDelegate);
+
 class UBoxComponent;
 UCLASS()
 class WIRSPRAWIEDLIWOSCI_API ABuildingExit : public AActor, public IInteractInterface
@@ -35,6 +37,9 @@ public:
 
 	UPROPERTY()
 	FTimerHandle TeleportTimer;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FOnExitedDelegate OnExited;
 protected:
 	virtual void BeginPlay() override;
 

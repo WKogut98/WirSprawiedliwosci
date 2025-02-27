@@ -51,5 +51,8 @@ public:
 	TArray<FString> KilledNPCs;
 
 	UPROPERTY()
+	TArray<FString> Choices;
+
+	UPROPERTY()
 	TArray<FNPCData> NPCsData;
 };
