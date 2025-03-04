@@ -768,3 +768,27 @@ AActor* UDefaultGameInstance::FindActorByName(FString SearchedName, TSubclassOf<
 	}
 	return nullptr;
 }
+
+void UDefaultGameInstance::AddChoice(FString NewChoice)
+{
+	if (NewChoice.IsEmpty()) return;
+	Choices.AddUnique(NewChoice);
+}
+
+bool UDefaultGameInstance::WasChoiceMade(FString SearchedChoice)
+{
+	if (Choices.Contains(SearchedChoice)) return true;
+	return false;
+}
+
+bool UDefaultGameInstance::WasNPCKilled(FString NPCName)
+{
+	if (KilledNPCs.Contains(NPCName)) return true;
+	return false;
+}
+
+void UDefaultGameInstance::AddToKilledNPCs(FString NPCName)
+{
+	if (NPCName.IsEmpty()) return;
+	KilledNPCs.AddUnique(NPCName);
+}

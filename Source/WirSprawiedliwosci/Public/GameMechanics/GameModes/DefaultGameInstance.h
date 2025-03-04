@@ -116,6 +116,18 @@ public:
 	UFUNCTION()
 	AActor* FindActorByName(FString SearchedName, TSubclassOf<AActor> ActorClass);
 
+	UFUNCTION(BlueprintCallable)
+	void AddChoice(FString NewChoice);
+
+	UFUNCTION(BlueprintCallable)
+	bool WasChoiceMade(FString SearchedChoice);
+
+	UFUNCTION(BlueprintCallable)
+	bool WasNPCKilled(FString NPCName);
+
+	UFUNCTION(BlueprintCallable)
+	void AddToKilledNPCs(FString NPCName);
+
 	UPROPERTY()
 	URPGSaveGame* SavedGame;
 
