@@ -113,7 +113,7 @@ public:
 	UFUNCTION()
 	void OnAsyncSaveFinished(const FString& SlotName, const int32 UserIndex, bool bSuccess);
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	AActor* FindActorByName(FString SearchedName, TSubclassOf<AActor> ActorClass);
 
 	UFUNCTION(BlueprintCallable)

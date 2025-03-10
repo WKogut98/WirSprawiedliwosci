@@ -29,7 +29,7 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	UMediaSoundComponent* MediaSound;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMediaSource* Cutscene;
 
 	UPROPERTY(EditAnywhere);
